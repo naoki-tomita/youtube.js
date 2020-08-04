@@ -1,0 +1,19 @@
+type Author {
+  id: ID!
+  name: String!
+  description: String
+  videos: [Video!]!
+}
+
+type Video {
+  id: ID!
+  title: String!
+  description: String
+  author: Author!
+}
+
+type Query {
+  videos: [Video!]!
+  authors: [Author!]!
+  video(id: ID!): Video
+}
