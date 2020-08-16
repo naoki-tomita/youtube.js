@@ -1,6 +1,7 @@
 import express from "express";
+import cors from "cors";
 import { ApolloServer, gql } from "apollo-server-express";
-import { Resolvers, Author } from "../generated/graphql";
+import { Resolvers, Author, Video } from "../generated/graphql";
 import { readFile } from "fs";
 import { join } from "path";
 import { VideoUsecase } from "../usecases/VideoUsecase";
@@ -8,7 +9,6 @@ import { AuthorUsecase } from "../usecases/AuthorUsecase";
 import { Language } from "../Language";
 import { createProgressiveDownload } from "./ExpressProgressiveDownload";
 import ffmpeg from "fluent-ffmpeg";
-import { Writable } from "stream";
 
 async function readFileAsync(path: string) {
   return new Promise<string>((ok, ng) => readFile(path, (err, data) => err ? ng(err) : ok(data.toString())));
@@ -48,9 +48,13 @@ async function main() {
       async authors(...[,, { language }]) {
         return (await authorUsecase.list(Language.find(language))).map(toAuthor);
       },
-      async video(_, { id }, { language }) {
+      async video(_, { id }, { language, session }) {
+        console.log(session)
         const entry = await videoUsecase.findBy(id, Language.find(language));
         return entry && toVideo(entry);
+      },
+      async author(_, { id }, { language, session }) {
+        return null;
       }
     },
     Video: {
@@ -61,6 +65,14 @@ async function main() {
     Author: {
       async videos(...[author,, { language }]) {
         return (await videoUsecase.findByAuthorId(author.id, Language.find(language))).map(toVideo);
+      }
+    },
+    Mutation: {
+      async registerVideo(_, { description, title }, { language }) {
+        return {} as Video;
+      },
+      async registerAuthor(_, { loginId, password, description, name }, { language }) {
+        return toAuthor((await authorUsecase.create({ loginId, password }, Language.find(language[0] ?? "en-US")))!);
       }
     }
   };
@@ -73,15 +85,19 @@ async function main() {
     resolvers: resolvers as any,
     context: ({ req }) => ({
       language: parseAcceptLanguage(req.headers["accept-language"] ?? "")[0] || "en-US",
+      session: req.cookies?.session ?? null,
     }),
   });
 
   const app = express();
+  app.use(express.json());
+
   app.get("/v1/videos/:id", createProgressiveDownload(async (req) => {
     const { id } = req.params;
     const video = await videoUsecase.findBy(id || "", Language.enUS);
     return video?.filePath ?? null;
   }));
+
   app.get("/v1/thumbnails/:id", async (req, res) => {
     const { id } = req.params;
     const video = await videoUsecase.findBy(id || "", Language.enUS);
@@ -106,8 +122,18 @@ async function main() {
     }
   });
 
+
+  app.post("/v1/users/login", cors(), async (req, res) => {
+    const { loginId, password } = req.body;
+    const author = await authorUsecase.verify(loginId, password);
+    if (author != null) {
+      return res.cookie("session", author?.id).status(200).end();
+    }
+    res.clearCookie("session").status(200).end();
+  });
+
   apollo.applyMiddleware({ app, cors: true })
-  const server = app.listen(8081, () => { console.log(`Server started.`) });
+  const _ = app.listen(8081, () => { console.log(`Server started.`) });
 }
 
 function parseAcceptLanguage(acceptLanguage: string) {

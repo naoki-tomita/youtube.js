@@ -26,7 +26,12 @@ export function mergeItemsGroupById<T extends {
   return rows
     .sort(languageSort(language))
     .reduce<{[key: string]: T}>((prev, curr) => {
-      prev[curr.id] = { ...prev[curr.id], ...curr };
+      prev[curr.id] = merge(prev[curr.id], curr);
       return prev;
     }, {});
+}
+
+export function merge(a: any, b: any) {
+  Object.keys(b).forEach(key => b[key] == null && delete b[key]);
+  return {...a, ...b};
 }

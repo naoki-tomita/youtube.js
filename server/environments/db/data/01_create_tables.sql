@@ -2,9 +2,12 @@
 
 CREATE TABLE author (
   id VARCHAR(36) NOT NULL,
+  login_id VARCHAR(100) NOT NULL,
+  password VARCHAR(100) NOT NULL,
   created_at TIMESTAMP NOT NULL,
   updated_at TIMESTAMP,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE(login_id)
 );
 
 CREATE TABLE i18n_author (

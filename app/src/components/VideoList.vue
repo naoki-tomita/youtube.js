@@ -47,7 +47,7 @@ a {
   display: flex;
   align-items: flex-start;
   text-decoration: none;
-  color: #000;
+  color: #444;
 }
 
 .info {

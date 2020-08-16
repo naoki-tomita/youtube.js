@@ -47,41 +47,53 @@ interface I18nAuthor {
 @named
 export class DBDriver {
 
-  async allVideos() {
-    return await client.query<Video & I18nVideo>(`
+  allVideos() {
+    return client.query<Video & I18nVideo>(`
       SELECT * FROM video
         INNER JOIN i18n_video
         ON video.id = i18n_video.video_id;`);
   }
 
-  async allAuthors() {
-    return await client.query<Author & I18nAuthor>(`
+  allAuthors() {
+    return client.query<Author & I18nAuthor>(`
       SELECT * FROM author
         INNER JOIN i18n_author
         ON author.id = i18n_author.author_id;`);
   }
 
-  async findVideosByAuthorId(authorId: string) {
-    return await client.query<Video & I18nVideo>(`
+  findVideosByAuthorId(authorId: string) {
+    return client.query<Video & I18nVideo>(`
       SELECT * FROM video
         INNER JOIN i18n_video
         ON video.id = i18n_video.video_id
         WHERE video.author_id = $1;`, [authorId]);
   }
 
-  async findAuthorBy(id: string) {
-    return await client.query<Author & I18nAuthor>(`
+  findAuthorBy(id: string) {
+    return client.query<Author & I18nAuthor>(`
       SELECT * FROM author
         INNER JOIN i18n_author
         ON author.id = i18n_author.author_id
         WHERE author.id = $1`, [id]);
   }
 
-  async findVideoBy(id: string) {
-    return await client.query<Video & I18nVideo>(`
+  findVideoBy(id: string) {
+    return client.query<Video & I18nVideo>(`
       SELECT * FROM video
         INNER JOIN i18n_video
         ON video.id = i18n_video.video_id
         WHERE video.id = $1`, [id]);
+  }
+
+  async createAuthor(id: string, loginId: string, password: string, name: string, description: string | undefined, language: string) {
+    await client.query(`INSERT INTO author(id, created_at, login_id, password) VALUES($1, now(), $2, $3)`, [id, loginId, password]);
+    await client.query(`INSERT INTO i18n_author(id, language, name, description) VALUES($1, $2, $3, $4)`, [id, language, name, description]);
+  }
+
+  findAuthorByLoginIdAndPassword(loginId: string, password: string) {
+    console.log(loginId, password)
+    return client.query<Author>(`
+      SELECT * FROM author
+        WHERE login_id = $1 AND password = $2`, [loginId, password]);
   }
 }

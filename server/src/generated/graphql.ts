@@ -18,15 +18,41 @@ export type Author = {
   videos: Array<Video>;
 };
 
+export type Mutation = {
+  __typename?: 'Mutation';
+  registerAuthor: Author;
+  registerVideo: Video;
+};
+
+
+export type MutationRegisterAuthorArgs = {
+  loginId: Scalars['String'];
+  password: Scalars['String'];
+  name?: Maybe<Scalars['String']>;
+  description?: Maybe<Scalars['String']>;
+};
+
+
+export type MutationRegisterVideoArgs = {
+  title?: Maybe<Scalars['String']>;
+  description?: Maybe<Scalars['String']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   videos: Array<Video>;
   authors: Array<Author>;
   video?: Maybe<Video>;
+  author?: Maybe<Author>;
 };
 
 
 export type QueryVideoArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryAuthorArgs = {
   id: Scalars['ID'];
 };
 
@@ -121,6 +147,7 @@ export type ResolversTypes = {
   ID: ResolverTypeWrapper<Scalars['ID']>;
   String: ResolverTypeWrapper<Scalars['String']>;
   Author: ResolverTypeWrapper<Author>;
+  Mutation: ResolverTypeWrapper<{}>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
 };
 
@@ -131,6 +158,7 @@ export type ResolversParentTypes = {
   ID: Scalars['ID'];
   String: Scalars['String'];
   Author: Author;
+  Mutation: {};
   Boolean: Scalars['Boolean'];
 };
 
@@ -142,10 +170,16 @@ export type AuthorResolvers<ContextType = any, ParentType extends ResolversParen
   __isTypeOf?: IsTypeOfResolverFn<ParentType>;
 };
 
+export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  registerAuthor?: Resolver<ResolversTypes['Author'], ParentType, ContextType, RequireFields<MutationRegisterAuthorArgs, 'loginId' | 'password'>>;
+  registerVideo?: Resolver<ResolversTypes['Video'], ParentType, ContextType, RequireFields<MutationRegisterVideoArgs, never>>;
+};
+
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   videos?: Resolver<Array<ResolversTypes['Video']>, ParentType, ContextType>;
   authors?: Resolver<Array<ResolversTypes['Author']>, ParentType, ContextType>;
   video?: Resolver<Maybe<ResolversTypes['Video']>, ParentType, ContextType, RequireFields<QueryVideoArgs, 'id'>>;
+  author?: Resolver<Maybe<ResolversTypes['Author']>, ParentType, ContextType, RequireFields<QueryAuthorArgs, 'id'>>;
 };
 
 export type VideoResolvers<ContextType = any, ParentType extends ResolversParentTypes['Video'] = ResolversParentTypes['Video']> = {
@@ -158,6 +192,7 @@ export type VideoResolvers<ContextType = any, ParentType extends ResolversParent
 
 export type Resolvers<ContextType = any> = {
   Author?: AuthorResolvers<ContextType>;
+  Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Video?: VideoResolvers<ContextType>;
 };
